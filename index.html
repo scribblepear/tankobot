@@ -1,0 +1,1686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tankōbot - AI Manga, Manhwa & Manhua Discovery</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800;900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --cream: #FBF2C0;
+            --dark-brown: #48392A;
+            --medium-brown: #43281C;
+            --coral: #C06E52;
+            --salmon: #F96F5D;
+            --white: #ffffff;
+            --shadow-soft: 0 4px 20px rgba(67, 40, 28, 0.1);
+            --shadow-hover: 0 8px 30px rgba(67, 40, 28, 0.15);
+        }
+
+        body {
+            font-family: 'Rubik', sans-serif;
+            background: linear-gradient(180deg, var(--cream) 0%, #ffffff 100%);
+            color: var(--dark-brown);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Header with social links */
+        .header {
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header-logo {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--medium-brown);
+        }
+
+        /* Organic blob shapes in background */
+        .organic-shapes {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            overflow: hidden;
+            opacity: 0.3;
+        }
+
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(60px);
+        }
+
+        .blob-1 {
+            width: 400px;
+            height: 400px;
+            background: var(--salmon);
+            top: -200px;
+            right: -100px;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        .blob-2 {
+            width: 300px;
+            height: 300px;
+            background: var(--coral);
+            bottom: -150px;
+            left: -100px;
+            animation: float 25s ease-in-out infinite reverse;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+            33% {
+                transform: translate(30px, -30px) rotate(120deg);
+            }
+            66% {
+                transform: translate(-20px, 20px) rotate(240deg);
+            }
+        }
+
+        /* Hero Section */
+        .hero-section {
+            text-align: center;
+            padding: 2rem;
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        /* Content container for hero elements */
+        .hero-content {
+            width: 100%;
+            transform: translateY(-5%); /* Slight upward adjustment for visual balance */
+        }
+
+        .logo-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .logo {
+            font-size: clamp(4rem, 10vw, 7rem);
+            font-weight: 900;
+            color: var(--medium-brown);
+            letter-spacing: -0.03em;
+            margin-bottom: 0.5rem;
+            position: relative;
+            display: inline-block;
+        }
+
+        .logo-asterisk {
+            position: absolute;
+            top: -20px;
+            right: -60px;
+            font-size: 4rem;
+            color: var(--salmon);
+            transform: rotate(15deg);
+            font-weight: 400;
+        }
+
+        .tagline {
+            font-size: 1.1rem;
+            color: var(--dark-brown);
+            font-weight: 500;
+            letter-spacing: 0.02em;
+            text-align: center;
+            margin-top: -0.5rem;
+        }
+
+        /* Search Section */
+        .search-wrapper {
+            max-width: 600px;
+            margin: 2.5rem auto 0;
+            padding: 0 2rem;
+        }
+
+        /* Tag Filter Section */
+        .filter-section {
+            margin-top: 2rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            padding: 0 2rem;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .filter-section.fade-out {
+            opacity: 0;
+            transform: translateY(-10px);
+            pointer-events: none;
+        }
+
+        .filter-label {
+            font-size: 0.9rem;
+            color: var(--dark-brown);
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            display: block;
+            text-align: center;
+        }
+
+        .tag-filter-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            justify-content: center;
+        }
+
+        .tag-filter {
+            background: var(--white);
+            border: 2px solid var(--coral);
+            border-radius: 20px;
+            padding: 0.4rem 1rem;
+            font-size: 0.85rem;
+            color: var(--dark-brown);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            font-family: 'Rubik', sans-serif;
+            position: relative;
+        }
+
+        .tag-filter:hover {
+            background: rgba(192, 110, 82, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .tag-filter.active {
+            background: var(--coral);
+            color: var(--white);
+        }
+
+        .tag-filter.active::after {
+            content: '✓';
+            margin-left: 0.3rem;
+        }
+
+        /* Custom tag input */
+        .custom-tag-container {
+            margin-top: 1rem;
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .custom-tag-input {
+            background: var(--white);
+            border: 2px solid var(--coral);
+            border-radius: 20px;
+            padding: 0.4rem 1rem;
+            font-size: 0.85rem;
+            color: var(--dark-brown);
+            font-family: 'Rubik', sans-serif;
+            font-weight: 500;
+            outline: none;
+            width: 200px;
+            transition: all 0.3s ease;
+        }
+
+        .custom-tag-input:focus {
+            border-color: var(--salmon);
+            box-shadow: 0 0 0 3px rgba(249, 111, 93, 0.2);
+        }
+
+        .custom-tag-input::placeholder {
+            color: rgba(72, 57, 42, 0.5);
+            font-weight: 400;
+        }
+
+        .add-tag-btn {
+            background: var(--coral);
+            border: none;
+            border-radius: 20px;
+            padding: 0.4rem 1rem;
+            font-size: 0.85rem;
+            color: var(--white);
+            font-family: 'Rubik', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .add-tag-btn:hover {
+            background: var(--salmon);
+            transform: translateY(-2px);
+        }
+
+        .custom-tags-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            justify-content: center;
+            margin-top: 0.5rem;
+        }
+
+        .custom-tag {
+            background: var(--salmon);
+            color: var(--white);
+            border-radius: 20px;
+            padding: 0.4rem 1rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .remove-tag {
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s ease;
+        }
+
+        .remove-tag:hover {
+            transform: rotate(90deg);
+        }
+
+        /* Active filters display styling */
+        .active-filters-display {
+            text-align: center;
+            margin-bottom: 2rem;
+            display: none;
+        }
+
+        .active-filters-display.show {
+            display: block;
+        }
+
+        .active-filters-label {
+            font-size: 0.9rem;
+            color: var(--dark-brown);
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .active-filters-list {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .active-filter-tag {
+            background: var(--coral);
+            color: var(--white);
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .active-filter-tag.active-custom-tag {
+            background: var(--salmon);
+        }
+
+        .filter-separator {
+            color: var(--dark-brown);
+            opacity: 0.4;
+            font-weight: 300;
+        }
+
+        .search-container {
+            background: var(--white);
+            border-radius: 60px;
+            padding: 0.5rem;
+            box-shadow: var(--shadow-soft);
+            display: flex;
+            align-items: center;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            position: relative;
+        }
+
+        .search-container:hover {
+            box-shadow: var(--shadow-hover);
+            transform: translateY(-2px);
+            border-color: var(--coral);
+        }
+
+        /* Status dot */
+        .status-dot {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--salmon);
+            box-shadow: 0 0 0 3px rgba(249, 111, 93, 0.2);
+            z-index: 10;
+        }
+
+        .status-dot.connected {
+            background: var(--coral);
+            box-shadow: 0 0 0 3px rgba(192, 110, 82, 0.2);
+        }
+
+        .search-input {
+            flex: 1;
+            border: none;
+            background: none;
+            padding: 1rem 1.5rem 1rem 3rem;
+            font-size: 1rem;
+            font-family: 'Rubik', sans-serif;
+            font-weight: 500;
+            color: var(--dark-brown);
+            outline: none;
+        }
+
+        .search-input::placeholder {
+            color: rgba(72, 57, 42, 0.5);
+            font-weight: 400;
+        }
+
+        .search-btn {
+            background: var(--coral);
+            border: none;
+            border-radius: 50px;
+            padding: 1rem 2rem;
+            color: var(--white);
+            font-family: 'Rubik', sans-serif;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .search-btn:hover {
+            background: var(--salmon);
+            transform: scale(1.05);
+        }
+
+        .search-btn:active {
+            transform: scale(0.98);
+        }
+
+        .search-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Examples */
+        .examples {
+            margin-top: 1.5rem;
+            display: none !important;  /* Force hidden by default */
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            opacity: 1;
+        }
+
+        .examples.show {
+            display: flex !important;  /* Override the default hidden state */
+            animation: fadeInDown 0.4s ease-out;
+        }
+
+        .examples.fade-out {
+            opacity: 0;
+            transform: translateY(-10px);
+            pointer-events: none;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .example-pill {
+            background: var(--white);
+            border: 2px solid var(--coral);
+            border-radius: 25px;
+            padding: 0.4rem 1rem;
+            font-size: 0.85rem;
+            color: var(--dark-brown);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            opacity: 0.6;  /* Slightly opaque by default */
+        }
+
+        .example-pill:hover {
+            background: var(--coral);
+            color: var(--white);
+            transform: translateY(-2px);
+            opacity: 1;  /* Full opacity on hover */
+        }
+
+        /* Loading */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--cream);
+            border-top-color: var(--coral);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Results Section */
+        .results-section {
+            padding: 3rem 2rem 6rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .results-text {
+            font-size: 0.9rem;
+            color: var(--dark-brown);
+            text-align: center;
+            margin-bottom: 2rem;
+            font-weight: 500;
+        }
+
+        /* Grid with rounded cards */
+        .manga-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 1.5rem;
+            padding: 1rem;
+            width: 100%;
+            max-width: 1400px;
+        }
+
+        .manga-card {
+            background: var(--white);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: var(--shadow-soft);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            opacity: 0;
+            animation: slideUp 0.6s ease-out forwards;
+            border: 2px solid transparent;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .manga-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: var(--shadow-hover);
+            border-color: var(--coral);
+        }
+
+        .manga-cover-wrapper {
+            position: relative;
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--cream), var(--white));
+        }
+
+        .manga-cover {
+            width: 100%;
+            height: 260px;
+            object-fit: cover;
+            border-radius: 15px;
+        }
+
+        .manga-info {
+            padding: 1.25rem;
+        }
+
+        .manga-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--medium-brown);
+            margin-bottom: 0.5rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .manga-description {
+            font-size: 0.85rem;
+            color: var(--dark-brown);
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            opacity: 0.8;
+        }
+
+        .manga-meta {
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid var(--cream);
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--dark-brown);
+            opacity: 0.7;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .modal-content {
+            background: var(--white);
+            border-radius: 25px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUpModal 0.3s ease;
+        }
+
+        @keyframes slideUpModal {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--cream);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, var(--cream), rgba(251, 242, 192, 0.5));
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--medium-brown);
+            margin: 0;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 2rem;
+            color: var(--dark-brown);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: var(--coral);
+            color: var(--white);
+            transform: rotate(90deg);
+        }
+
+        .modal-body {
+            padding: 2rem;
+            overflow-y: auto;
+            max-height: calc(90vh - 100px);
+        }
+
+        .modal-content-wrapper {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .modal-cover-container {
+            flex: 1;
+            max-width: 50%;
+        }
+
+        .modal-cover {
+            width: 100%;
+            height: auto;
+            min-height: 400px;
+            border-radius: 15px;
+            box-shadow: var(--shadow-soft);
+            background: linear-gradient(135deg, var(--cream), var(--coral));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--dark-brown);
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-align: center;
+            padding: 1rem;
+            position: relative;
+        }
+
+        .modal-cover img {
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+            border-radius: 15px;
+            max-height: 600px;
+        }
+
+        .modal-info {
+            flex: 1;
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .modal-meta {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 0;
+            flex-wrap: wrap;
+        }
+
+        .meta-item {
+            background: var(--cream);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--dark-brown);
+        }
+
+        .modal-tags {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+            max-width: 100%;
+        }
+
+        .modal-tag {
+            background: var(--white);
+            border: 2px solid var(--coral);
+            color: var(--coral);
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .modal-description {
+            line-height: 1.6;
+            color: var(--dark-brown);
+            border-top: 1px solid var(--cream);
+            padding-top: 1.5rem;
+        }
+
+        .modal-description h3 {
+            margin-bottom: 1rem;
+            color: var(--medium-brown);
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--dark-brown);
+        }
+
+        .empty-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        /* Error toast */
+        .error-toast {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: var(--salmon);
+            color: var(--white);
+            padding: 1rem 1.5rem;
+            border-radius: 50px;
+            box-shadow: var(--shadow-soft);
+            display: none;
+            font-weight: 500;
+            z-index: 1000;
+        }
+
+        .error-toast.show {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+            }
+            to {
+                transform: translateX(0);
+            }
+        }
+
+        /* Footer */
+        .footer {
+            padding: 4rem 2rem;
+            color: var(--dark-brown);
+            font-size: 0.9rem;
+            background: linear-gradient(180deg, transparent 0%, var(--cream) 100%);
+            margin-top: 4rem;
+        }
+
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .copyright {
+            font-weight: 500;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+
+        .social-link {
+            color: var(--dark-brown);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .social-link:hover {
+            color: var(--coral);
+            transform: translateY(-3px);
+        }
+
+        .social-link svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .logo {
+                font-size: 4rem;
+            }
+            
+            .manga-grid {
+                grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+                gap: 1rem;
+            }
+            
+            .search-container {
+                flex-direction: column;
+                border-radius: 25px;
+                padding: 0.5rem;
+            }
+            
+            .search-input {
+                width: 100%;
+            }
+            
+            .search-btn {
+                width: 100%;
+                margin-top: 0.5rem;
+            }
+
+            .modal-content {
+                width: 95%;
+                border-radius: 20px;
+            }
+
+            .modal-body {
+                padding: 1.5rem;
+            }
+
+            .modal-content-wrapper {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .modal-cover-container {
+                width: 100%;
+                max-width: 100%;
+            }
+
+            .modal-cover {
+                height: 300px;
+            }
+
+            .modal-tags {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .footer-content {
+                flex-direction: column;
+                gap: 1.5rem;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Main content wrapper -->
+    <div class="main-content">
+        <!-- Organic background shapes -->
+        <div class="organic-shapes">
+            <div class="blob blob-1"></div>
+            <div class="blob blob-2"></div>
+        </div>
+
+        <!-- Hero section with integrated search -->
+        <div class="hero-section">
+            <div class="hero-content">
+                <div class="logo-container">
+                    <h1 class="logo">tankōbot</h1>
+                </div>
+                <p class="tagline">ai-powered manga • manhwa • manhua discovery</p>
+                
+                <div class="search-wrapper">
+                    <div class="search-container">
+                        <div class="status-dot" id="statusDot"></div>
+                        <input 
+                            type="text" 
+                            class="search-input" 
+                            id="searchInput"
+                            placeholder="describe your perfect story..."
+                            autocomplete="off"
+                        >
+                        <button class="search-btn" id="searchBtn" onclick="searchManga()">
+                            search
+                        </button>
+                    </div>
+                    
+                    <div class="examples" id="searchExamples" style="display: flex;">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+                
+                <!-- Tag Filter Section -->
+                <div class="filter-section" id="filterSection" style="display: none;">
+                    <label class="filter-label">filter by tags (optional):</label>
+                    <div class="tag-filter-container" id="tagFilters">
+                        <!-- Will be populated dynamically -->
+                    </div>
+                    
+                    <!-- Custom tag input -->
+                    <div class="custom-tag-container">
+                        <input 
+                            type="text" 
+                            class="custom-tag-input" 
+                            id="customTagInput" 
+                            placeholder="add custom tag..."
+                            onkeypress="handleCustomTagEnter(event)"
+                        >
+                        <button class="add-tag-btn" onclick="addCustomTag()">add</button>
+                    </div>
+                    <div class="custom-tags-list" id="customTagsList">
+                        <!-- Custom tags will appear here -->
+                    </div>
+                </div>
+                
+                <div class="loading" id="loading">
+                    <div class="loading-spinner"></div>
+                    <p style="margin-top: 1rem; color: var(--dark-brown); opacity: 0.7;">finding stories...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results section -->
+        <div class="results-section" id="resultsSection" style="display: none;">
+            <p class="results-text" id="resultsText">we found these stories for you</p>
+            
+            <!-- Active filters display -->
+            <div class="active-filters-display" id="activeFiltersDisplay">
+                <div class="active-filters-label">active filters:</div>
+                <div class="active-filters-list" id="activeFiltersList">
+                    <!-- Active filters will be shown here -->
+                </div>
+            </div>
+            
+            <div class="manga-grid" id="mangaGrid"></div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="copyright">© 2025 jason le</div>
+            <div class="social-links">
+                <a href="https://www.instagram.com/j4son.le/" class="social-link" target="_blank" aria-label="Instagram">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zM5.838 12a6.162 6.162 0 1 1 12.324 0 6.162 6.162 0 0 1-12.324 0zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm4.965-10.405a1.44 1.44 0 1 1 2.881.001 1.44 1.44 0 0 1-2.881-.001z"/>
+                    </svg>
+                </a>
+                <a href="https://github.com/scribblepear" class="social-link" target="_blank" aria-label="GitHub">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                    </svg>
+                </a>
+                <a href="https://linkedin.com/in/yourusername" class="social-link" target="_blank" aria-label="LinkedIn">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Modal for story details -->
+    <div id="storyModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">Story Title</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Content will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Error toast -->
+    <div class="error-toast" id="errorToast"></div>
+
+    <script>
+        // Configuration
+        const API_BASE_URL = 'http://localhost:8000';
+        
+        // State management
+        let currentSearchResults = [];
+        let selectedTags = new Set();
+        let customTags = new Set();
+        let currentSearchQuery = '';
+        let hasScrolledPastFilters = false;
+        
+        // Handle scroll to hide/show filter section
+        window.addEventListener('scroll', function() {
+            const filterSection = document.getElementById('filterSection');
+            const resultsSection = document.getElementById('resultsSection');
+            
+            // Only hide filters if we have results and filters are visible
+            if (filterSection && filterSection.style.display !== 'none' && resultsSection && resultsSection.style.display !== 'none') {
+                const scrollY = window.scrollY || window.pageYOffset;
+                
+                // Hide filters when scrolling down more than 150px
+                if (scrollY > 150 && !hasScrolledPastFilters) {
+                    filterSection.classList.add('fade-out');
+                    hasScrolledPastFilters = true;
+                } else if (scrollY <= 150 && hasScrolledPastFilters) {
+                    filterSection.classList.remove('fade-out');
+                    hasScrolledPastFilters = false;
+                }
+            }
+        });
+        
+        // Common manga/manhwa/manhua tags (generalized)
+        const commonTags = [
+            'Romance', 'Action', 'Fantasy', 'Comedy', 'Drama', 
+            'Supernatural', 'School Life', 'Slice of Life', 'Mystery', 
+            'Historical', 'Horror', 'Psychological', 'Sports', 'Sci-Fi',
+            'Adventure', 'Shounen', 'Shoujo', 'Seinen', 'Josei',
+            'Isekai', 'Reincarnation', 'Martial Arts', 'Magic',
+            'Demons', 'Military', 'Medical', 'Music', 'Vampire'
+        ];
+        
+        // Initialize tag filters
+        function initializeTagFilters() {
+            const tagFiltersContainer = document.getElementById('tagFilters');
+            tagFiltersContainer.innerHTML = '';
+            
+            commonTags.forEach(tag => {
+                const tagButton = document.createElement('button');
+                tagButton.className = 'tag-filter';
+                tagButton.textContent = tag.toLowerCase();
+                tagButton.onclick = () => toggleTagFilter(tag, tagButton);
+                tagFiltersContainer.appendChild(tagButton);
+            });
+        }
+        
+        // Update active filters display above results
+        function updateActiveFiltersDisplay() {
+            const activeFiltersDisplay = document.getElementById('activeFiltersDisplay');
+            const activeFiltersList = document.getElementById('activeFiltersList');
+            
+            // Check if we have any active filters
+            const hasActiveFilters = selectedTags.size > 0 || customTags.size > 0;
+            
+            if (hasActiveFilters) {
+                activeFiltersDisplay.classList.add('show');
+                activeFiltersList.innerHTML = '';
+                
+                let isFirst = true;
+                
+                // Add preset tags
+                selectedTags.forEach(tag => {
+                    if (!isFirst) {
+                        // Add separator dot
+                        const separator = document.createElement('span');
+                        separator.className = 'filter-separator';
+                        separator.textContent = '•';
+                        activeFiltersList.appendChild(separator);
+                    }
+                    
+                    const tagElement = document.createElement('span');
+                    tagElement.className = 'active-filter-tag';
+                    tagElement.textContent = tag.toLowerCase();
+                    activeFiltersList.appendChild(tagElement);
+                    
+                    isFirst = false;
+                });
+                
+                // Add custom tags
+                customTags.forEach(tag => {
+                    if (!isFirst) {
+                        // Add separator dot
+                        const separator = document.createElement('span');
+                        separator.className = 'filter-separator';
+                        separator.textContent = '•';
+                        activeFiltersList.appendChild(separator);
+                    }
+                    
+                    const tagElement = document.createElement('span');
+                    tagElement.className = 'active-filter-tag active-custom-tag';
+                    tagElement.textContent = tag;
+                    activeFiltersList.appendChild(tagElement);
+                    
+                    isFirst = false;
+                });
+            } else {
+                activeFiltersDisplay.classList.remove('show');
+            }
+        }
+        
+        // Toggle tag filter
+        function toggleTagFilter(tag, button) {
+            if (selectedTags.has(tag)) {
+                selectedTags.delete(tag);
+                button.classList.remove('active');
+            } else {
+                selectedTags.add(tag);
+                button.classList.add('active');
+            }
+            
+            // Update active filters display
+            updateActiveFiltersDisplay();
+            
+            // Perform new search with tags
+            if (currentSearchQuery) {
+                performTaggedSearch();
+            }
+        }
+        
+        // Handle custom tag input
+        function handleCustomTagEnter(event) {
+            if (event.key === 'Enter') {
+                addCustomTag();
+            }
+        }
+        
+        // Add custom tag
+        function addCustomTag() {
+            const input = document.getElementById('customTagInput');
+            const customTag = input.value.trim();
+            
+            if (customTag && !customTags.has(customTag)) {
+                customTags.add(customTag);
+                renderCustomTags();
+                updateActiveFiltersDisplay();  // Update active filters display
+                input.value = '';
+                
+                // Perform new search with updated tags
+                if (currentSearchQuery) {
+                    performTaggedSearch();
+                }
+            }
+        }
+        
+        // Remove custom tag
+        function removeCustomTag(tag) {
+            customTags.delete(tag);
+            renderCustomTags();
+            updateActiveFiltersDisplay();  // Update active filters display
+            
+            // Perform new search with updated tags
+            if (currentSearchQuery) {
+                performTaggedSearch();
+            }
+        }
+        
+        // Render custom tags
+        function renderCustomTags() {
+            const customTagsList = document.getElementById('customTagsList');
+            customTagsList.innerHTML = '';
+            
+            customTags.forEach(tag => {
+                const tagElement = document.createElement('div');
+                tagElement.className = 'custom-tag';
+                tagElement.innerHTML = `
+                    ${tag}
+                    <span class="remove-tag" onclick="removeCustomTag('${tag.replace(/'/g, "\\'")}')">&times;</span>
+                `;
+                customTagsList.appendChild(tagElement);
+            });
+        }
+        
+        // Perform search with tag filters
+        async function performTaggedSearch() {
+            const loading = document.getElementById('loading');
+            const resultsSection = document.getElementById('resultsSection');
+            
+            // Combine original query with tag filters
+            const allTags = [...selectedTags, ...customTags];
+            let enhancedQuery = currentSearchQuery;
+            
+            if (allTags.length > 0) {
+                enhancedQuery += ' ' + allTags.join(' ');
+            }
+            
+            loading.classList.add('active');
+            resultsSection.style.display = 'none';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/search`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        query: enhancedQuery,
+                        limit: 15  // Maximum 15 results
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Search failed');
+                }
+                
+                const data = await response.json();
+                currentSearchResults = data.results;
+                displayResults(currentSearchResults);
+                updateActiveFiltersDisplay();  // Update active filters display
+                
+            } catch (error) {
+                console.error('Search error:', error);
+                showError('couldn\'t refine search, try again');
+            } finally {
+                loading.classList.remove('active');
+            }
+        }
+        
+        // Clear all tag filters
+        function clearTagFilters() {
+            selectedTags.clear();
+            customTags.clear();
+            document.querySelectorAll('.tag-filter').forEach(button => {
+                button.classList.remove('active');
+            });
+            renderCustomTags();
+        }
+        
+        // Check API status
+        async function checkAPIStatus() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/`);
+                const data = await response.json();
+                
+                if (data.status === 'active' && data.database_loaded) {
+                    document.getElementById('statusDot').classList.add('connected');
+                }
+            } catch (error) {
+                console.error('API connection error:', error);
+            }
+        }
+
+        checkAPIStatus();
+        setInterval(checkAPIStatus, 30000);
+
+        // Create randomized search suggestions
+        function populateSearchExamples() {
+            const allExamples = [
+                'ice skating romance',
+                'forgiveness story',
+                'school supernatural',
+                'female lead fantasy',
+                'time travel adventure',
+                'cooking competition',
+                'detective mystery',
+                'vampire romance',
+                'post-apocalyptic survival',
+                'music band story',
+                'medical drama',
+                'reincarnation fantasy',
+                'sports rivalry',
+                'office romance',
+                'magical academy',
+                'zombie apocalypse',
+                'arranged marriage',
+                'childhood friends reunion',
+                'revenge plot',
+                'treasure hunting'
+            ];
+            
+            // Shuffle and pick 4 random examples
+            const shuffled = allExamples.sort(() => Math.random() - 0.5);
+            const selectedExamples = shuffled.slice(0, 4);
+            
+            const examplesContainer = document.getElementById('searchExamples');
+            examplesContainer.innerHTML = '';
+            
+            selectedExamples.forEach(example => {
+                const pill = document.createElement('span');
+                pill.className = 'example-pill';
+                pill.textContent = example;
+                pill.onclick = () => setExample(example);
+                examplesContainer.appendChild(pill);
+            });
+            
+            // Ensure examples are hidden initially
+            examplesContainer.classList.remove('show');
+            examplesContainer.style.display = 'none';
+        }
+
+        // Initialize examples and tag filters on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            populateSearchExamples();
+            initializeTagFilters();
+        });
+
+        // Handle search input focus/blur for examples
+        const searchInput = document.getElementById('searchInput');
+        const searchExamples = document.getElementById('searchExamples');
+        let hasSearched = false;
+        let isClickingExample = false;
+
+        // Show examples when clicking on search input
+        searchInput.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (!hasSearched) {
+                searchExamples.classList.remove('fade-out');
+                searchExamples.classList.add('show');
+            }
+        });
+
+        searchInput.addEventListener('focus', function() {
+            if (hasSearched && customTags.size === 0 && selectedTags.size === 0) {
+                searchExamples.classList.remove('fade-out');
+                searchExamples.classList.add('show');
+            }
+        });
+
+        // Handle clicking outside
+        document.addEventListener('click', function(e) {
+            if (!searchInput.contains(e.target) && !searchExamples.contains(e.target)) {
+                searchExamples.classList.remove('show');
+                searchExamples.classList.add('fade-out');
+            }
+        });
+
+        // Prevent examples from closing when clicking on them
+        searchExamples.addEventListener('mousedown', function(e) {
+            e.preventDefault();
+        });
+
+        function setExample(text) {
+            const input = document.getElementById('searchInput');
+            input.value = text;
+            input.focus();
+        }
+
+        function showError(message) {
+            const toast = document.getElementById('errorToast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 4000);
+        }
+
+        async function searchManga() {
+            const query = document.getElementById('searchInput').value.trim();
+            const searchBtn = document.getElementById('searchBtn');
+            const loading = document.getElementById('loading');
+            const resultsSection = document.getElementById('resultsSection');
+            const filterSection = document.getElementById('filterSection');
+            
+            if (!query) {
+                showError('please describe what you\'re looking for');
+                return;
+            }
+
+            // Store the current search query
+            currentSearchQuery = query;
+
+            // Clear previous filters when new search
+            clearTagFilters();
+            
+            // Reset scroll state
+            hasScrolledPastFilters = false;
+            if (filterSection) {
+                filterSection.classList.remove('fade-out');
+            }
+
+            // Hide examples after first search
+            if (!hasSearched) {
+                hasSearched = true;
+                searchExamples.classList.remove('show');
+                searchExamples.classList.add('fade-out');
+            }
+
+            searchBtn.disabled = true;
+            loading.classList.add('active');
+            resultsSection.style.display = 'none';
+            filterSection.style.display = 'none';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/search`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        query: query,
+                        limit: 15  // Maximum 15 results
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Search failed');
+                }
+
+                const data = await response.json();
+                currentSearchResults = data.results;
+                displayResults(currentSearchResults);
+                
+                // Show filter section if we have results
+                if (currentSearchResults.length > 0) {
+                    filterSection.style.display = 'block';
+                }
+                
+            } catch (error) {
+                console.error('Search error:', error);
+                showError('couldn\'t search right now, try again');
+                
+            } finally {
+                searchBtn.disabled = false;
+                loading.classList.remove('active');
+            }
+        }
+
+        function displayResults(results, isFiltered = false) {
+            const resultsSection = document.getElementById('resultsSection');
+            const mangaGrid = document.getElementById('mangaGrid');
+            const resultsText = document.getElementById('resultsText');
+            
+            mangaGrid.innerHTML = '';
+            
+            if (!results || results.length === 0) {
+                if (isFiltered) {
+                    mangaGrid.innerHTML = `
+                        <div class="empty-state" style="grid-column: 1 / -1;">
+                            <div class="empty-icon">🔍</div>
+                            <h3 style="color: var(--medium-brown); margin-bottom: 0.5rem;">no stories match your refined search</h3>
+                            <p>try different tags or remove some filters</p>
+                        </div>
+                    `;
+                    resultsText.textContent = 'no stories found with those tags';
+                } else {
+                    mangaGrid.innerHTML = `
+                        <div class="empty-state" style="grid-column: 1 / -1;">
+                            <div class="empty-icon">📚</div>
+                            <h3 style="color: var(--medium-brown); margin-bottom: 0.5rem;">no stories found</h3>
+                            <p>try describing it differently</p>
+                        </div>
+                    `;
+                    resultsText.textContent = 'hmm, nothing matched';
+                }
+            } else {
+                // Check if we have active filters
+                const hasFilters = selectedTags.size > 0 || customTags.size > 0;
+                
+                if (hasFilters) {
+                    resultsText.textContent = 'found some stories with your tags';
+                } else {
+                    resultsText.textContent = `we found ${results.length} stories for you`;
+                }
+                
+                results.forEach((manga, index) => {
+                    const card = document.createElement('div');
+                    card.className = 'manga-card';
+                    card.style.animationDelay = `${index * 0.08}s`;
+                    
+                    // Create a placeholder background
+                    const placeholderGradient = `linear-gradient(135deg, ${['#C06E52', '#F96F5D', '#48392A', '#FBF2C0'][index % 4]}, ${['#F96F5D', '#48392A', '#FBF2C0', '#C06E52'][index % 4]})`;
+                    
+                    card.innerHTML = `
+                        <div class="manga-cover-wrapper">
+                            <img src="${manga.cover || '/static/cover-not-found.jpg'}" 
+                                 alt="${manga.title}" 
+                                 class="manga-cover"
+                                 loading="lazy"
+                                 style="background: ${placeholderGradient};"
+                                 onerror="this.style.display='none'; this.parentElement.style.background='${placeholderGradient}';">
+                        </div>
+                        <div class="manga-info">
+                            <h3 class="manga-title">${manga.title}</h3>
+                            <p class="manga-description">${manga.description || 'No description available'}</p>
+                            ${manga.year || manga.rating ? `
+                                <div class="manga-meta">
+                                    ${manga.year ? `<span>${manga.year}</span>` : '<span></span>'}
+                                    ${manga.rating ? `<span>★ ${manga.rating.toFixed(1)}</span>` : ''}
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                    
+                    // Add load event to handle successful image loads
+                    const img = card.querySelector('.manga-cover');
+                    img.addEventListener('load', function() {
+                        this.style.background = 'none';
+                        this.parentElement.style.background = 'none';
+                    });
+                    
+                    // Add click event to show modal
+                    card.addEventListener('click', () => {
+                        showStoryModal(manga, placeholderGradient);
+                    });
+                    
+                    mangaGrid.appendChild(card);
+                });
+            }
+            
+            resultsSection.style.display = 'block';
+            resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // Modal functions
+        function showStoryModal(story, fallbackGradient) {
+            const modal = document.getElementById('storyModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalBody = document.getElementById('modalBody');
+            
+            modalTitle.textContent = story.title || 'Unknown Title';
+            
+            // Parse tags if they're a string
+            let tagsHtml = '';
+            if (story.tags) {
+                try {
+                    const tags = typeof story.tags === 'string' ? JSON.parse(story.tags.replace(/'/g, '"')) : story.tags;
+                    tagsHtml = `
+                        <div class="modal-tags">
+                            ${tags.map(tag => `<span class="modal-tag">${tag}</span>`).join('')}
+                        </div>
+                    `;
+                } catch (e) {
+                    // If parsing fails, treat as a single string
+                    tagsHtml = `<div class="modal-tags"><span class="modal-tag">${story.tags}</span></div>`;
+                }
+            }
+            
+            // Create cover HTML with placeholder if no image
+            let coverHtml = '';
+            if (story.cover) {
+                coverHtml = `
+                    <div class="modal-cover">
+                        <img src="${story.cover}" 
+                             alt="${story.title}"
+                             onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'padding: 2rem;\\'>cover not found</div>';">
+                    </div>
+                `;
+            } else {
+                coverHtml = `
+                    <div class="modal-cover" style="background: ${fallbackGradient};">
+                        <div>cover not found</div>
+                    </div>
+                `;
+            }
+            
+            modalBody.innerHTML = `
+                <div class="modal-content-wrapper">
+                    <div class="modal-cover-container">
+                        ${coverHtml}
+                    </div>
+                    
+                    <div class="modal-info">
+                        <div class="modal-meta">
+                            ${story.year ? `<div class="meta-item">📅 ${story.year}</div>` : ''}
+                            ${story.rating ? `<div class="meta-item">⭐ ${story.rating.toFixed(1)}/5</div>` : ''}
+                            ${story.uid ? `<div class="meta-item">ID: ${story.uid}</div>` : ''}
+                        </div>
+                        
+                        ${tagsHtml}
+                    </div>
+                </div>
+                
+                <div class="modal-description">
+                    <h3>Description</h3>
+                    <p>${story.description || 'No description available.'}</p>
+                </div>
+            `;
+            
+            modal.classList.add('show');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('storyModal');
+            modal.classList.remove('show');
+        }
+
+        // Close modal when clicking outside
+        window.addEventListener('click', function(event) {
+            const modal = document.getElementById('storyModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        });
+
+        // Close modal with Escape key
+        window.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeModal();
+            }
+        });
+
+        // Enter key support
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                searchManga();
+            }
+        });
+    </script>
+</body>
+</html>
