@@ -213,7 +213,7 @@
         }
 
         .tag-filter.active::after {
-            content: '✓';
+            content: '✔';
             margin-left: 0.3rem;
         }
 
@@ -378,8 +378,21 @@
         }
 
         .status-dot.connected {
-            background: var(--coral);
-            box-shadow: 0 0 0 3px rgba(192, 110, 82, 0.2);
+            background: #4caf50;
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(76, 175, 80, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
+            }
         }
 
         .search-input {
@@ -562,6 +575,23 @@
             position: relative;
             padding: 1rem;
             background: linear-gradient(135deg, var(--cream), var(--white));
+            height: 280px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Improved cover placeholder */
+        .cover-placeholder {
+            width: 100%;
+            height: 100%;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: bold;
         }
 
         .manga-cover {
@@ -569,6 +599,11 @@
             height: 260px;
             object-fit: cover;
             border-radius: 15px;
+            display: none; /* Hidden by default */
+        }
+
+        .manga-cover.loaded {
+            display: block;
         }
 
         .manga-info {
@@ -886,6 +921,25 @@
             fill: currentColor;
         }
 
+        /* Debug info */
+        .debug-info {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            font-family: monospace;
+            z-index: 9999;
+            display: none;
+        }
+
+        .debug-info.show {
+            display: block;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .header {
@@ -971,7 +1025,7 @@
                 
                 <div class="search-wrapper">
                     <div class="search-container">
-                        <div class="status-dot" id="statusDot"></div>
+                        <div class="status-dot" id="statusDot" title="Connection status"></div>
                         <input 
                             type="text" 
                             class="search-input" 
@@ -1075,9 +1129,15 @@
     <!-- Error toast -->
     <div class="error-toast" id="errorToast"></div>
 
+    <!-- Debug info panel (hidden by default, press 'd' key to toggle) -->
+    <div class="debug-info" id="debugInfo">
+        <div>Debug Info</div>
+        <div id="debugContent"></div>
+    </div>
+
     <script>
         // Configuration
-        const API_BASE_URL = 'https://tankobot-backend-production.up.railway.app'; // Replace with your actual Railway URL
+        const API_BASE_URL = 'https://tankobot-backend-production.up.railway.app';
         
         // State management
         let currentSearchResults = [];
@@ -1085,6 +1145,26 @@
         let customTags = new Set();
         let currentSearchQuery = '';
         let hasScrolledPastFilters = false;
+        let debugMode = false;
+        
+        // Toggle debug mode with 'd' key
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'd' && e.target.tagName !== 'INPUT') {
+                debugMode = !debugMode;
+                document.getElementById('debugInfo').classList.toggle('show', debugMode);
+                if (debugMode) {
+                    updateDebugInfo('Debug mode activated');
+                }
+            }
+        });
+        
+        function updateDebugInfo(message) {
+            if (debugMode) {
+                const debugContent = document.getElementById('debugContent');
+                const timestamp = new Date().toLocaleTimeString();
+                debugContent.innerHTML = `[${timestamp}] ${message}<br>${debugContent.innerHTML}`.substring(0, 500);
+            }
+        }
         
         // Handle scroll to hide/show filter section
         window.addEventListener('scroll', function() {
@@ -1319,9 +1399,13 @@
                 
                 if (data.status === 'active' && data.database_loaded) {
                     document.getElementById('statusDot').classList.add('connected');
+                    updateDebugInfo('API connected and database loaded');
+                } else {
+                    updateDebugInfo('API active but database not loaded');
                 }
             } catch (error) {
                 console.error('API connection error:', error);
+                updateDebugInfo(`API connection error: ${error.message}`);
             }
         }
 
@@ -1404,7 +1488,7 @@
         });
 
         searchInput.addEventListener('focus', function() {
-            if (hasSearched && customTags.size === 0 && selectedTags.size === 0) {
+            if (!hasSearched) {
                 searchExamples.classList.remove('fade-out');
                 searchExamples.classList.add('show');
             }
@@ -1436,6 +1520,51 @@
             setTimeout(() => {
                 toast.classList.remove('show');
             }, 4000);
+        }
+
+        // Improved image loading with multiple fallbacks
+        function createMangaCoverElement(manga, index) {
+            const placeholderColors = [
+                ['#C06E52', '#F96F5D'],
+                ['#F96F5D', '#48392A'],
+                ['#48392A', '#FBF2C0'],
+                ['#FBF2C0', '#C06E52']
+            ];
+            const colors = placeholderColors[index % 4];
+            const gradient = `linear-gradient(135deg, ${colors[0]}, ${colors[1]})`;
+            
+            // Try to fix common cover URL issues
+            let coverUrl = manga.cover || '';
+            
+            // Log the original cover URL for debugging
+            updateDebugInfo(`Cover URL for "${manga.title}": ${coverUrl}`);
+            
+            // Handle relative URLs or missing protocols
+            if (coverUrl && !coverUrl.startsWith('http')) {
+                if (coverUrl.startsWith('//')) {
+                    coverUrl = 'https:' + coverUrl;
+                } else if (coverUrl.startsWith('/')) {
+                    // Assume it's from the API server
+                    coverUrl = API_BASE_URL + coverUrl;
+                }
+            }
+            
+            return `
+                <div class="manga-cover-wrapper" style="background: ${gradient};">
+                    ${coverUrl ? `
+                        <img src="${coverUrl}" 
+                             alt="${manga.title}" 
+                             class="manga-cover"
+                             loading="lazy"
+                             crossorigin="anonymous"
+                             onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'cover-placeholder\\' style=\\'background: ${gradient};\\'>${manga.title.charAt(0)}</div>';">
+                    ` : `
+                        <div class="cover-placeholder" style="background: ${gradient};">
+                            ${manga.title.charAt(0)}
+                        </div>
+                    `}
+                </div>
+            `;
         }
 
         async function searchManga() {
@@ -1475,6 +1604,8 @@
             filterSection.style.display = 'none';
 
             try {
+                updateDebugInfo(`Searching for: ${query}`);
+                
                 const response = await fetch(`${API_BASE_URL}/api/search`, {
                     method: 'POST',
                     headers: {
@@ -1491,6 +1622,7 @@
                 }
 
                 const data = await response.json();
+                updateDebugInfo(`Received ${data.results.length} results`);
                 currentSearchResults = data.results;
                 displayResults(currentSearchResults);
                 
@@ -1501,6 +1633,7 @@
                 
             } catch (error) {
                 console.error('Search error:', error);
+                updateDebugInfo(`Search error: ${error.message}`);
                 showError('couldn\'t search right now, try again');
                 
             } finally {
@@ -1551,18 +1684,8 @@
                     card.className = 'manga-card';
                     card.style.animationDelay = `${index * 0.08}s`;
                     
-                    // Create a placeholder background
-                    const placeholderGradient = `linear-gradient(135deg, ${['#C06E52', '#F96F5D', '#48392A', '#FBF2C0'][index % 4]}, ${['#F96F5D', '#48392A', '#FBF2C0', '#C06E52'][index % 4]})`;
-                    
                     card.innerHTML = `
-                        <div class="manga-cover-wrapper">
-                            <img src="${manga.cover || '/static/cover-not-found.jpg'}" 
-                                 alt="${manga.title}" 
-                                 class="manga-cover"
-                                 loading="lazy"
-                                 style="background: ${placeholderGradient};"
-                                 onerror="this.style.display='none'; this.parentElement.style.background='${placeholderGradient}';">
-                        </div>
+                        ${createMangaCoverElement(manga, index)}
                         <div class="manga-info">
                             <h3 class="manga-title">${manga.title}</h3>
                             <p class="manga-description">${manga.description || 'No description available'}</p>
@@ -1575,16 +1698,20 @@
                         </div>
                     `;
                     
-                    // Add load event to handle successful image loads
+                    // Try to load the image after card creation
                     const img = card.querySelector('.manga-cover');
-                    img.addEventListener('load', function() {
-                        this.style.background = 'none';
-                        this.parentElement.style.background = 'none';
-                    });
+                    if (img) {
+                        img.addEventListener('load', function() {
+                            this.classList.add('loaded');
+                            this.parentElement.style.background = 'none';
+                        });
+                    }
                     
                     // Add click event to show modal
                     card.addEventListener('click', () => {
-                        showStoryModal(manga, placeholderGradient);
+                        const colors = ['#C06E52', '#F96F5D', '#48392A', '#FBF2C0'];
+                        const gradient = `linear-gradient(135deg, ${colors[index % 4]}, ${colors[(index + 1) % 4]})`;
+                        showStoryModal(manga, gradient);
                     });
                     
                     mangaGrid.appendChild(card);
@@ -1619,13 +1746,23 @@
                 }
             }
             
-            // Create cover HTML with placeholder if no image
+            // Create cover HTML with fallback
+            let coverUrl = story.cover || '';
+            if (coverUrl && !coverUrl.startsWith('http')) {
+                if (coverUrl.startsWith('//')) {
+                    coverUrl = 'https:' + coverUrl;
+                } else if (coverUrl.startsWith('/')) {
+                    coverUrl = API_BASE_URL + coverUrl;
+                }
+            }
+            
             let coverHtml = '';
-            if (story.cover) {
+            if (coverUrl) {
                 coverHtml = `
                     <div class="modal-cover">
-                        <img src="${story.cover}" 
+                        <img src="${coverUrl}" 
                              alt="${story.title}"
+                             crossorigin="anonymous"
                              onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'padding: 2rem;\\'>cover not found</div>';">
                     </div>
                 `;
@@ -1638,58 +1775,4 @@
             }
             
             modalBody.innerHTML = `
-                <div class="modal-content-wrapper">
-                    <div class="modal-cover-container">
-                        ${coverHtml}
-                    </div>
-                    
-                    <div class="modal-info">
-                        <div class="modal-meta">
-                            ${story.year ? `<div class="meta-item">📅 ${story.year}</div>` : ''}
-                            ${story.rating ? `<div class="meta-item">⭐ ${story.rating.toFixed(1)}/5</div>` : ''}
-                            ${story.uid ? `<div class="meta-item">ID: ${story.uid}</div>` : ''}
-                        </div>
-                        
-                        ${tagsHtml}
-                    </div>
-                </div>
-                
-                <div class="modal-description">
-                    <h3>Description</h3>
-                    <p>${story.description || 'No description available.'}</p>
-                </div>
-            `;
-            
-            modal.classList.add('show');
-        }
-
-        function closeModal() {
-            const modal = document.getElementById('storyModal');
-            modal.classList.remove('show');
-        }
-
-        // Close modal when clicking outside
-        window.addEventListener('click', function(event) {
-            const modal = document.getElementById('storyModal');
-            if (event.target === modal) {
-                closeModal();
-            }
-        });
-
-        // Close modal with Escape key
-        window.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape') {
-                closeModal();
-            }
-        });
-
-        // Enter key support
-        document.getElementById('searchInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                searchManga();
-            }
-        });
-    </script>
-</body>
-</html>
+                <div class="modal-
