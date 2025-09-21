@@ -1077,7 +1077,7 @@
 
     <script>
         // Configuration
-        const API_BASE_URL = 'http://localhost:8000';
+        const API_BASE_URL = 'https://tankobot-backend-production.up.railway.app'; // Replace with your actual Railway URL
         
         // State management
         let currentSearchResults = [];
@@ -1327,6 +1327,15 @@
 
         checkAPIStatus();
         setInterval(checkAPIStatus, 30000);
+        
+        // Show loading message for production environment
+        if (window.location.hostname !== 'localhost' && !window.location.protocol.includes('file')) {
+            setTimeout(() => {
+                if (!document.getElementById('statusDot').classList.contains('connected')) {
+                    showError('waking up the server... this may take 30-60 seconds on first visit');
+                }
+            }, 3000);
+        }
 
         // Create randomized search suggestions
         function populateSearchExamples() {
