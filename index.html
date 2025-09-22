@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>tankōbot - AI Manga, Manhwa & Manhua Discovery</title>
+    <title>tankÅbot - AI Manga, Manhwa & Manhua Discovery</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800;900&display=swap');
         
@@ -363,7 +363,7 @@
             border-color: var(--coral);
         }
 
-        /* Status dot */
+        /* Status dot - Updated for mobile fix */
         .status-dot {
             position: absolute;
             left: 20px;
@@ -375,6 +375,7 @@
             background: var(--salmon);
             box-shadow: 0 0 0 3px rgba(249, 111, 93, 0.2);
             z-index: 10;
+            transition: all 0.3s ease;
         }
 
         .status-dot.connected {
@@ -886,7 +887,7 @@
             fill: currentColor;
         }
 
-        /* Responsive */
+        /* Responsive - Updated with mobile status dot fix */
         @media (max-width: 768px) {
             .header {
                 flex-direction: column;
@@ -908,8 +909,17 @@
                 padding: 0.5rem;
             }
             
+            /* Fix status dot positioning for mobile */
+            .status-dot {
+                position: absolute;
+                left: 20px;
+                top: 20px; /* Fixed position from top instead of center */
+                transform: none; /* Remove the transform that causes centering issues */
+            }
+            
             .search-input {
                 width: 100%;
+                padding: 1rem 1.5rem 1rem 3rem; /* Keep left padding for dot space */
             }
             
             .search-btn {
@@ -965,7 +975,7 @@
         <div class="hero-section">
             <div class="hero-content">
                 <div class="logo-container">
-                    <h1 class="logo">tankōbot</h1>
+                    <h1 class="logo">tank&#333;bot</h1>
                 </div>
                 <p class="tagline">ai-powered manga • manhwa • manhua discovery</p>
                 
@@ -1560,8 +1570,7 @@
                                  alt="${manga.title}" 
                                  class="manga-cover"
                                  loading="lazy"
-                                 style="background: ${placeholderGradient};"
-                                 onerror="this.style.display='none'; this.parentElement.style.background='${placeholderGradient}';">
+                                 style="background: ${placeholderGradient};">
                         </div>
                         <div class="manga-info">
                             <h3 class="manga-title">${manga.title}</h3>
@@ -1580,6 +1589,21 @@
                     img.addEventListener('load', function() {
                         this.style.background = 'none';
                         this.parentElement.style.background = 'none';
+                    });
+                    
+                    // Simple error handling for image loading
+                    img.addEventListener('error', function() {
+                        console.log('Image failed to load:', this.src);
+                        this.style.display = 'none';
+                        this.parentElement.style.background = placeholderGradient;
+                        // Only add the fallback text if it doesn't already exist
+                        if (!this.parentElement.querySelector('.fallback-text')) {
+                            const fallbackText = document.createElement('div');
+                            fallbackText.className = 'fallback-text';
+                            fallbackText.style.cssText = 'position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: var(--dark-brown); font-size: 0.8rem; text-align: center; padding: 1rem;';
+                            fallbackText.textContent = 'cover not available';
+                            this.parentElement.appendChild(fallbackText);
+                        }
                     });
                     
                     // Add click event to show modal
@@ -1626,13 +1650,13 @@
                     <div class="modal-cover">
                         <img src="${story.cover}" 
                              alt="${story.title}"
-                             onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'padding: 2rem;\\'>cover not found</div>';">
+                             onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'padding: 2rem; color: var(--dark-brown); text-align: center;\\'>cover not available</div>';">
                     </div>
                 `;
             } else {
                 coverHtml = `
                     <div class="modal-cover" style="background: ${fallbackGradient};">
-                        <div>cover not found</div>
+                        <div>cover not available</div>
                     </div>
                 `;
             }
