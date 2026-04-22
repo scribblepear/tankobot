@@ -34,7 +34,7 @@ python main.py
 # frontend - just open index.html or use live server
 ```
 
-What I'd improve
+## What I'd improve
 
 - Swap the single HTML file for a proper React/Next.js frontend
 - Add user accounts so people can save favorites
