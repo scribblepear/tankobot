@@ -32,6 +32,7 @@ echo "OPENAI_API_KEY=your_key" > .env
 python main.py
 
 # frontend - just open index.html or use live server
+```
 
 What I'd improve
 
